@@ -1,0 +1,398 @@
+<!doctype html>
+<html>
+<head>
+   <meta charset="utf-8"/>
+   <title>Class Project Assignment 1, CSC 203</title>
+   <link rel="stylesheet" href="../lib/assignment.css" type="text/css">
+</head>
+
+<body>
+<div class="container">
+<div class="boxed">
+<div class="header">
+  <h1>Class Project Assignment 1, CSC 203</h1>
+</div>
+
+<p>
+CSC 203 is structured around a class project.  The project is a
+graphical simulation of a virtual world, where graphical entities
+move around on a grid.  The main moving entities are miners, who seek
+out ore.  When a given miner gets enough ore, it seeks out a
+blacksmith, where it unloads the ore.  It then seeks out more ore.
+This virtual world was named "Minecraft 2, Electric Boogaloo" in a
+vote by the Spring 2018 CSC 203 class, beating out the name
+"Mine 'n Dash."  You are welcome to change the name of your version
+of the program.
+<p>
+You are provided with an initial version of this program.  It works,
+but it's unfinished.  It's also been written in a non object-oriented,
+purely procedural fashion.  As we explore object-oriented programming
+and design, you will restructure this code so that it's easier to understand,
+maintain and modify.  You will also progressively add functionality to
+the program.
+<p>
+The initial version of the program is in the <code>procedural</code>
+directory.  You can compile and run the program by typing 
+<code>./run.sh</code> in that directory if you're on Linux or Mac, or 
+by typing <code>wrun.cmd</code> on Windows.  Invoke it with </code>-help</code>
+for a list of options.  It will run in graphical mode if it can, or in
+text mode if a graphics screen isn't available.  Typically, a graphical
+screen won't be available if you're logging into a Unix server using
+ssh.  When the program runs in graphics mode, it should look like this:
+<p>
+<center><img src="html_images/p1_graphical.png"></center>
+<p>
+For text mode, you'll need to make your screen slightly larger
+than 80x24 characters.  Letters are used to represent the different
+characters:  miners are represented with alternating "m" and "M" characters,
+ore is represented with "$", a blacksmith with "B", etc.  In text mode,
+the simulation will look like this:
+<p>
+<center><img src="html_images/p1_text.png"></center>
+</p>
+<div class="header">
+  <h2>Compiling and Running the Provided Code</h2>
+</div>
+<p>
+To start, take a look at <code>run.sh</code>, or if you're running on
+Windows, <code>wrun.cmd</code>.
+<code>run.sh</code> is the more sophisticated of the two.  It's a
+"bash script."  Bash, the "Bourne Again Shell" is a text-based command
+interpreter developed on Unix; you can read more about it at
+<a href="https://en.wikipedia.org/wiki/Bash_(Unix_shell)">https://en.wikipedia.org/wiki/Bash_(Unix_shell)</a> if
+you're curious.  A bash script is just a collection of bash commands in a file.
+We're not learning bash programming in this class, but it's tedious to 
+manually type the commands to compile and run a Java program.  This script
+was provided for you, so you can easily compile and run the program.  You 
+may need to modify it slightly for your
+computer.  It does the following:
+<ul>
+<li>It changes directory to the main program directory.
+<li>It checks for the environment varialbe MATERIALS_DIR_203, a variable
+    that holds the path to where you checked out the materials directory.
+    It uses this to find the two libraries used by the program.  You need
+    set an environment variable called MATERIALS_DIR_203 to
+    contain the path of your materials directory.  See
+    <code>info/setup.txt</code> in the materials directory for more
+    information on this.
+<li>It sets the variable LIBS to refer to the two libraries we use,
+    <a href="https://spritely.jovial.com">Spritely</a> and 
+    <a href="https://testy.jovial.com">Testy</a>.  Copies of the
+    compiled libraries and their documentation is in
+    <code>materials/lib</code>.
+<li>It runs the java compiler, <code>javac</code> on the program source
+    files in <code>src</code>.  This converts the <code>.java</code>
+    source files into </code>.class</code> files, which are stored
+    in the directory <code>out</code>.  <code>javac</code> is invoked
+    with arguments that cause it to apply stricter correctness checks
+    than is the default (<code>-Xlint:unchecked</code>).  The default
+    behavior is good when compiling old code, but stricter checks are
+    better when writing new code, because it will catch more errors for you.
+    The compiler is also invoked with an option to limit the number of
+    errors it reports to five (<code>-Xmaxerrs 5</code>), so that
+    you're not forced to scroll through too much compiler output when
+    things go wrong.
+<li>It sets up the Unix environment so that your Java program can receive
+    input one keystroke at a time, rather than having it be forced to
+    wait until you type a complete line.  Further, it sets things up
+    to restore the environment to the normal behavior, even if you abort
+    the program with ^c (control-c).
+<li>It runs your program with the <code>java</code> command, starting
+    with the class <code>Main</code>, searching for code to load in the
+    libraries and the <code>out</code> directory.  Any command-line
+    options you specify are forwarded to java ("<code>$*</code>").
+    A java language feature called "assertions" is enabled with
+    <code>-ea</code>.
+</ul>
+<p>
+Before continuing, make sure you can compile and run the provided code.
+You can set up your computer to run it locally if you like.  See
+<code>materials/info/setup.txt</code> for more information about this.
+
+<div class="header">
+  <h2>Understanding the Provided Code</h2>
+</div>
+<p>
+When you run the program, it starts by executing the static method
+<code>Main.main()</code>.  Take a look at <code>Main.java</code>.  In this
+program, it just processes the command-line arguments, and then invokes
+the static method </code>VirtualWorld.runSimulation()</code>.  From
+there, you should be able to read through what the code does.  There are
+some comments in the code, but there aren't many.  Figuring out what
+the code does is part of the assignment.  It is hoped that by the end
+of the class, you'll see why it's easier to understand code that's written
+in a well-structured, object-oriented fashion, even in the absence of
+extensive documentation.
+<p>
+As mentioned earlier, this program uses two libraries,
+<a href="https://spritely.jovial.com">Spritely</a> and 
+<a href="https://testy.jovial.com">Testy</a>.  Take a moment to
+read through the documentation for these libraries.  In the provided
+code, it's easy to tell when the code is using a class from a library,
+because all of the import statements are explicit.  For example,
+in <code>VirtualWorld</code>, various classes from Spritely are
+used, but each is imported explicitly at the beginning of the file,
+rather than using a wildcard import 
+(<code>import edu.calpoly.spritely.*</code>).  Many Java style guides
+recommend <i>against</i> using wildcard imports for this very reason.
+<p>
+You should set up bookmarks for the Spritely documentation and the Testy
+documentation, which are in <code>materials/libs</code>.  You
+should also set up a bookmark for the JDK 1.11 API documentation,
+which is available at
+<a href="https://docs.oracle.com/en/java/javase/11/docs/api/index.html">https://docs.oracle.com/en/java/javase/11/docs/api/index.html</a>.  
+You can also download a local copy
+of the JDK 1.8 javadocs is you wish.
+<p>
+Before you get started with the project, spend some time reading through
+the code.  Look up the documentation for the library classes it
+uses, especially those in the Java standard library.  Also, spend some
+time reading up on the basic unix commands, in
+<code>materials/info/unix_commands.txt</code>  Make sure you understand
+how to use <code>grep</code> -- it will come in especially handy as you
+begin to distribute code around in multiple files.
+
+<div class="header">
+  <h2>Reading the UML diagram</h2>
+</div>
+<p>
+There is a graphical diagram in the file 
+<code>procedural/doc/classes.graphml</code>.  You can view and modify it with
+the <code>yed</code> graph editor - see <code>info/setup.txt</code> in
+the materials directory for information about installing yed.  If you're
+in the lab, you can launch it with the command <code>yed</code>.
+<p>
+Selecting a class diagram, right-clicking, and then selecting the 
+Properties option will open a dialog window to allow editing the 
+class diagram. Selecting the UML tab will then allow editing the 
+lists of attributes and methods.  This dialog window can be resized.
+Please take a moment to load the given digram into yEd and take a look 
+at the general structure of the provided code. We will be using this 
+code base for the rest of the quarter.  See also the description
+in <code>procedural/doc/documentation.html</code>.
+
+<div class="header">
+  <h2>Part 1:  Finish <code>EventSchedule</code></h2>
+</div>
+<p>
+When you ran the program, you probably noticed a number of TODO messages
+being printed out.  These came from the source code in 
+<code>EventSchdule.java</code>.  There are three methods in this class that
+are not implemented.  The behavior of each is specified in a comment before
+the method.  In part 1, your taks is to replace the print statement with
+a correct implementation in each method.  <em>Do not change the method name,
+arguments, or return type.</em>
+<p>
+<code>EventSchedule</code> is a class with two fields:  A <code>List</code>
+called <code>pendingEvents</code>, and a double called <code>currentTime</code>.
+Your implementation of the three incomplete methods uses the Java language
+mechanisms you've learned, plus the methods of <code>List</code>.  You'll
+note that the type of the list is <code>List&lt;Event&gt;</code>; this syntax
+means it's a list that holds objects of type Event.  You'll learn how
+to define your own generic classes that take type parameters later in the
+class.
+<p>
+In order to know what you can to with a list, look at the javadocs,
+at <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html">https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html</a>.  As you can see, the full name of the type is
+<code>java.util.List</code>.  It  has a large number of methods, but you
+just need to use simple ones, like <code>add()</code>, <code>get()</code>,
+and <code>remove()</code>.  In a large professional software environment like
+Java, it's normal for the libraries that you use to have many features you
+don't need.  One of the skills you're learning is how to be selective when
+you read documentation like this.
+<p>
+<b>Please do not immediately try to find the answer you need using a
+search engine!</b>  Blindly doing an internet search might be fast, but
+it's risky.  Often information you find is not applicable, or flat-out wrong.
+A search engine can be a useful tool, but reading the official documentation
+is a necessary skill.  
+<p>
+For this assignment, you might be annoyed by the fact that you're forced
+to write relatively inefficient <i>O(n^2)</i> code 
+in <code>EventSchedule</code>.
+You should be!  As you learned in prior classes, there are more efficient
+data structures for maintaining a queue of elements that is sorted from earliest
+to latest, like or event schedule.  You will be addressing this in a later
+assignment, once we've learned some more language constructs that are helpful
+for this.
+<p>
+Once you have correctly implemented the three methods of
+<code>EventSchedule</code>, the program should spring to life.  You'll see
+that the miners animate and move at different rates.  Trace through the
+code, starting from main, to see how this is all being set up.  All of the
+activity is being coordinated through the <code>EventSchedule</code> class
+that you just implemented!
+
+<div class="header">
+  <h2>Part 2:  UML for Code Refactoring</h2>
+</div>
+<p>
+Your next task in this assignment is to modify the UML so that the 
+<code>Functions</code> class is eliminated, and all of the
+static methods
+are made into appropriate methods for the various classes.  Most of them
+should become instance methods.  For this first assignment, you're just
+being asked to turn in the modified UML diagram.  However, in the next
+assignment you'll be applying these changes to the code, and you're
+welcome to do that now.  Either way, you'll need to read and understand
+the existing code now.
+<p>
+<font color="red">WARNING:</font>  Not all sections of 203 are asked to
+completely eliminate the functions class.  It's possible that tutors or other
+resources might not know this.  Make sure you double-check the assignment
+instructions if you ask someone for clarification; they might have done a
+different assignment, or their memory might be off.
+<p>
+Note that good design is somewhat subjective.  Even so, for most of the
+methods here, there is a single "correct" class into which the method should
+be moved.  For a small number of methods, one could reasonably argue in favor
+of a few different classes.  For example, there are multiple classes with which
+one could reasonably associate the <code>adjacent</code> method.  Do your best
+to make reasonable decisions based on the design discussion in lecture and
+document these decisions in your design document.
+<p>
+There is one kind of method in <code>Functions</code> that deserves special
+treatment:  Some of the <code>createXXX</code> methods.  Some of them create
+different kinds of entities.  As such, they do belong with Entity, due to their
+return type, not their parameter.  For now,
+these methods should be left as static methods, but they should be moved
+to Entity.
+
+<h4 class="header">Access Modifiers</h4>
+<p>
+   With the exception of some constant (<code>static final</code>) values,
+   and the class <code>Point</code>, 
+   all data attributes should be <code>private</code> and, when possible,
+   <code>final</code>.  It's OK for data holders like <code>Point</code> 
+   to have public members, particularly when they are final.
+
+<p>
+   Methods should also be <code>private</code> unless <code>public</code>
+   access is necessary (i.e., it is used outside of the defining class).
+   For this assignment, every method should be either <code>private</code>
+   or <code>public</code>.  In this course, we are not using Java packages,
+   so Java's package-private access level is not meaningful.
+<h4 class="header">Deliverables</h4>
+<p>
+You need to create an updated <code>classes.graphml</code> UML document
+containing your updated design.  Make sure it's complete!  It should reflect
+all of the changes you plan to make to the code, based on the planned
+design changes.  You must also submit a
+text design document.  In a text file, list each group of methods,
+and a justification for why you put it where you did.
+If you think the method could reasonably be placed in multiple classes, 
+discuss what the alternatives are, the reason(s) why you made the choice you 
+did, and the reasons(s) why the other place or places made sense.
+<p>
+Many of the methods fall into groups that all have the same justification.
+It's OK to give a list of similar methods, and then give the justification
+for the group once.
+<p>
+Please submit either a plain text file called <code>DESIGN.txt</code> or a
+PDF file called <code>DESIGN.pdf</code>.  It's OK to store the original
+word processor file in your repository too, but only <code>DESIGN.pdf</code>
+or <code>DESIGN.txt</code> will be read.
+
+<div class="header">
+<h2>Identifying Methods</h2>
+</div>
+
+<p>
+The provided source code uses objects to hold data; these objects have
+no methods (no behavior).  Your task for this assignment is to identify
+the behavior associated with instances of a class (that is, objects) and 
+move this behavior from standalone functions to methods defined within the
+class.  Remember that an instance method is <u>not</u> underlined in UML.
+An instance method is automatically supplied with a reference to
+the object that it operates on; for this reason, instance methods will
+have one fewer argument than the original static method.
+</p>
+
+<p>
+Reasonable steps for this assignment include:
+</p>
+
+<ul>
+   <li>
+      Run the program.  You can use <code>-fast</code>, <code>-faster</code>,
+      <code>-fastest</code> on the command-line to increase the rate at which
+      actions are executed.
+   <li>
+      Read the source code, starting from <code>Main.main()</code>.  
+         You might even want to add print 
+         statements at strategic points, to see if the code is working
+	 the way you think it is.
+   <li>
+      View the provided UML diagram to see the name of each class and the
+      data stored within instances of each class.
+   <li>
+      Identify methods that interact with the data stored within an object.
+   <li>
+      Match behavior to classes.
+      <p>When looking for good matches of functions with classes, consider
+         the following hints:
+         <ul>
+            <li>If the attribute of an object is accessed directly
+                  via a dot (e.g., <i>entity.name</i>), then either
+                  the function in which this access appears should be
+                  defined in the object's class, or the access should be
+                  done via an accessor method.
+            <li>If a method determines its behavior based on the "kind"
+                  (e.g., the the various values of <code>ActionKind</code> or
+                  <code>EntityKind</code>)
+                  of object it is manipulating, then this method should likely
+                  be moved into that object's corresponding class (do not
+                  introduce separate classes at this time).
+         </ul>
+   <li>
+      <p>
+         There are some methods that may remain as static methods, but
+         that can be reasonably moved into another class.  These are often
+         "utility" methods derived from decomposing a problem
+         into simpler methods.
+   <li>
+      <p>Run the program to verify that it behaves as expected.
+</ul>
+<p>
+In this assignment, you are not being asked to add any needed accessor
+methods to the diagram.
+
+<div class="header">
+<h2>Submission</h2>
+</div>
+
+<p>
+Submit your documents in <code>turninXXX/p1/doc</code> to GitHub 
+by midnight on the due date.  
+If you'd like to submit the assignment one day late with a penalty of 5%, 
+add a file called <code>late_5_percent_off.txt</code> to the 
+<code>p1</code> directory.  If you'd like to submit the assignment two 
+days late with a penalty of 15%, add a file called
+<code>late_15_percent_off.txt</code> to the <code>p1</code>
+directory.  Make sure you add and push the late file.
+<p>
+After your diagram is finished and submitted,
+check your submission using the <code>checkgit</code> command on the
+unix server.  If the autograder can't find your files for a reason that
+is caught by <code>checkgit</code>, you will get a zero on the assignment.  To
+check your submission, on a Unix server type:
+<blockquote><pre>checkgit &lt;git-login> 203 p1</pre></blockquote>
+<p>
+If it works, you will see the message "<code>** Tests Passed **</code>".  If not,
+you will see some kind of error message.  The error message might not tell
+you exactly what you need to change, but it should give an indication as
+to what is wrong.
+<p>
+Read what <code>checkgit</code> is telling you!  If there is a problem with your
+submission, it will print out an error message that should lead you to
+understanding what's wrong.  It also prints out other helpful information,
+like an analysis of your <code>classes.graphml</code> file.  One of the best
+things you can do now to save time later is to read and understand the
+diagnostic messages you get from tools like <code>checkgit</code> and
+<code>javac</code>.
+
+
+</div>
+</div>
+</body>
+</html>

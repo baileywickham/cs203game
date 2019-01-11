@@ -1,0 +1,423 @@
+<!doctype html>
+<html>
+<head>
+   <meta charset="utf-8"/>
+   <title>Class Project Assignment 4, CSC 203</title>
+   <link rel="stylesheet" href="../lib/assignment.css" type="text/css">
+</head>
+<body>
+<div class="container">
+<div class="boxed">
+<div class="header">
+  <h1>Class Project Assignment 4, CSC 203</h1>
+</div>
+
+<p>
+In this assignment, we will finish most of the refactoring by using 
+<b>abstract classes</b> to create an entity hierarchy.  Like an interface, an
+abstract class introduces a new type:  variables and expressions can take
+on the type of an abstract class.  Also like interfaces, you cannot directly
+create an instance of an abstract class.  Abstract classes allow you to share
+implementation between the supertype and the subtype, because they
+allow you to define fields and method implementations in the supertype.  
+This is distinct from interfaces, which are generally used only to declare 
+methods.  (Under certain, somewhat limited circumstances, interfaces also
+allow the definition of default method implementations, but the intent behind
+this is very different than is the case with abstract classes, and we will
+not be exploring default method definition for interfaces in this course.)
+<p>
+An abstract class allows you to share implementation code between different
+concrete subclasses, by putting the implementation in a common supertype,
+the abstract class.  This is called "implementation inheritance" when we
+want to distinguish it from the more loosely-coupled form of subtyping
+we get when we implement an interface.  Avoiding duplicate code is desirable,
+however, doing it via implementation inheritance comes with a price:  The 
+superclass/subclass relationship is a fairly tight form of coupling.  Often,
+composition is a better choice (see, for example, 
+<a href="https://en.wikipedia.org/wiki/Composition_over_inheritance">https://en.wikipedia.org/wiki/Composition_over_inheritance</a>).  However, in this 
+assignnent, we are focusing on inheritance.
+<p>
+In Java, a class can only have a single superclass.  Of course, the superclass
+can itself have a superclass; there can be any number of ancestor classes, all
+the way up to <code>java.lang.Object</code>.  Java's restriction of only one
+superclass per class is motivated by pragmatism:  Languages that allow
+multiple inheritance (multiple superclasses for a class) need complex rules
+to govern this inheritance.  In practice, it has been found that multiple
+implementation inheritance is almost never justified, so this capability
+was deliberately left out of Java.
+<p>
+In a case like our entity hierarchy, the problem domain is intrinsically
+hierarchical.  In a case like this, implementation inheritance is
+appropriate:  By the nature of the problem being solved, various kinds of
+entities are aleady fairly tightly copuled to their natural supertypes.  In
+a case like this, it is structurally simpler to use implementation inheritance
+than it is to use composition.
+<p>
+Abstract classes, then, allow us to refactor our code by introducing
+supertype/subtype relationships, where supertypes also define implementation
+that is common to all subtypes.  We will apply this technique to our
+entities, and replace <code>EntityKind</code> with a hierarchy of entity
+types.
+
+<div class="header">
+ <h2>Objectives</h2>
+ </div>
+ 
+<ul>
+<li>Improve the project code.
+<li>Identify where cohesion is low in an exisiting class design.
+<li>Modify an exisiting UML diagram (adding abstract classes and interfaces 
+    where needed to improve the overall code design in terms of cohesion).
+<li>Create new classes and interfaces, and eliminate the need for
+    for the enumerated type for <code>EntityKind</code>.
+<li>Apply these changes to the Java code.
+<li>Make design changes to a moderately large code base and 
+    have the code still work.
+</ul>
+
+
+<div class="header">
+<h2>Task Overview</h2>
+</div>
+
+<p>
+We will focus on entities. We will make <code>Entity</code> abstract, and make
+new concreate classes, one for each kind of entity enumerated
+by <code>EntityKind</code>.  Please continue to call the top class in this
+hierarchy <code>Entity</code>; this makes it possible for the grading program
+to find it.
+<p>
+Once we have an entity supertype and eight concrete entity subtypes,
+we'll examine
+the entities for what they have in common, and introduce abstract classes
+to capture shared implementations.  Refactor the code so that classes do
+not inherit code or fields that they don't use.  The goal for this assignment
+is to refactor the code so that:
+<ul>
+<li>There is no duplicate code.
+<li>Classes do not inherit fields or method implementations that they 
+    do not use.
+<li>The rest of the code in the game is refactored so that it appropriately
+    uses the new subtypes of <code>Entity</code> to improve the design.
+<li>The <code>EntityKind</code> class is eliminated.
+</ul>
+<p>
+Consider applying the
+<a href="https://en.wikipedia.org/wiki/Template_method_pattern">Template
+Method Pattern</a> to further reduce duplicate code.
+
+<p>
+Completion of this assignment will consist of
+</p>
+<ul>
+   <li>An updated UML document (still named <code>classes.graphml</code>).
+   <li>Refactored java code.
+</ul>
+
+<h4 class="header">
+Instance Methods
+</h4>
+
+<p>
+Identifying duplicate code within instance methods will require careful 
+examination of the code within the potentially duplicate methods.  As a 
+start, the names and
+parameters must generally match or be close, but the method implementation must 
+be considered as well.  
+
+<p>
+Your refactoring should not abuse inheritance with regard to methods.
+In particular, assume you have identified method <code>foo</code> as
+common among three classes (<code>A</code>, <code>B</code>,
+and <code>C</code>), but only two of them (<code>B</code> and <code>C</code>)
+have the same implementation.  You should not promote one implementation
+of <code>foo</code> (e.g., from <code>B</code> and <code>C</code>) to the
+new parent class only to then redefine it in some subclasses (e.g., in
+<code>A</code>).  Instead, you can, for example, define an abstract class (named
+<code>Abby</code> for this example) with an abstract method
+<code>foo</code>. <code>A</code> can extend <code>Abby</code> and define
+its implementation of <code>foo</code>.  Another new abstract
+class can also extend <code>Abby</code> to define the single implementation
+of <code>foo</code> used by <code>B</code> and <code>C</code> (which then
+extend this new class).
+</p>
+
+<p>
+For this exercise, all data should be <code>private</code> or
+</code>protected</code>.
+
+<h4 class="header">
+UML
+</h4>
+
+<p>
+You are encouraged to begin this refactoring by updating your
+UML document first, while looking at the code for method
+implementations.  Doing so allows you to take advantage of the graphical aspects
+of UML to immediately identify duplication and to quickly refactor by
+injecting intermediate classes.  Experience with this project indicates
+that the majority of duplication can be identified and refactored quickly
+through this approach, which then gives you an initial plan for
+the code modifications.  Focus on the most obvious duplications first.
+<p>
+Of course, you might discover further improvements after a first pass
+with UML.  This is fine; go ahead and make the improvement, in both the code
+and the UML.
+As always, be sure to compile and test your program frequently, so that
+if something goes wrong, it will be easy to find the problem!
+</p>
+
+<div class="header">
+<h2>Source Code Refactoring</h2>
+</div>
+
+<p>
+   Your refactoring should mirror the work that you do for your design
+document (UML diagram).  Your refactoring must not add or remove any
+program functionality.  The resulting program must work as before.
+</p>
+
+<div class="header">
+<h3>Getting Rid of <code>EntityType</code></h3>
+</div>
+<p>
+The first step in refactoring is to make <code>Entity</code> abstract, and to
+create eight concrete subclasses of <code>Entity</code>.  To start, these
+subclasses can be empty, except for the constructor.  At this stage, the
+constructor should just call <code>super(...)</code> with the arguments
+required by entity; this will be refactored and made simpler later.
+There should be one
+subclass for each enum value in <code>EntityType</code>.  For consistency,
+these classes must be called <code>Blacksmith</code>, <code>MinerFull</code>,
+<code>MinerNotFull</code>, <code>Obstacle</code>, <code>Ore</code>, 
+<code>OreBlob</code>, <code>Quake</code> and <code>Vein</code>.  
+<code>checkgit</code> will check to make sure you use these names.  To
+begin the refactoring, make these eight subclasses, make <code>Entity</code>
+abstract, and adjust the rest of the code as needed.  Then, compile and
+run the program, and make sure it still works.  Of course, you'll want to break
+this task up into multiple steps, where you build and run the program after
+each step.
+<p>
+Next, you can get rid of code in Entity that does something different for
+different <code>EntityKind</code> values, typically using a switch statement.
+You can do this by declaring the method as abstract in Entity, and by overriding
+it where it is needed in other classes.  This process might help you to arrive
+at a good hierearchy of abstract classes.
+<p>
+After this, you can get rid the remaining uses of the <code>EntityType</code> 
+enum.
+In the given code, values of the <code>EntityType</code> enum are sometimes
+passed as arguments to functions.  When you get rid of <code>EntityType</code>,
+you can instead pass a function that identifies the right type of
+entity.  You need a function that accepts one argument of type 
+<code>Entity</code>, and that returns a boolean value.  Java defines
+a functional interface for this:  <code>java.util.functions.Predicate</code>;
+you can make a <code>Predicate&ltEntity></code>.
+<p>
+In order to use this predicate, you can use a lambda.  The body of the
+function can determine if its argument is the type you want using
+<code>instanceof</code>.  For example, <code>findNearest</code> is 
+a method that takes an <code>entityKind</code>.  Your goal is to change
+calls to this method so they look like this:
+<blockquote><pre>    Blacksmith b = (Blacksmith) w.findNearest(pos, (Entity e) -> e instanceof Blacksmith);</pre></blockquote>
+<p>
+To make this improvement for <code>findNearest</code>, consider following 
+these steps:
+</p>
+
+<ol>
+<li><p>
+   Rename <code>findNearest()</code> to <code>oldFindNearest()</code>,
+   then compile and run your code.
+<li><p>
+   Add a new <code>findNearest()</code> method that doesn't take an argument
+   of type <code>Class</code>.  Instead, have it take a functional interface
+   instance, for a function that takes an <code>Entity</code> instance and
+   returns a boolean.  <code>java.util.function.Predicate&lt;Entity></code>
+   will work beautifully here.  A good name for this parameter might
+   be <code>isTarget</code>, since it's a function that determines if a given
+   entity satisfies the criteria to be a target.
+<li><p>
+   In the body of <code>findNearest()</code>, use the predicate
+   when the method needs
+   to test if an entity satisfies the condition that was passed in to it.
+   Compile your code.
+<li>
+   <p>
+   Find one place where <code>oldFindNearest()</code> is called.  Change it
+   to the new <code>findNearest()</code>, using a lambda as described
+   above.
+<li>
+   <p>
+   Compile and test your code.
+<li>
+   <p>
+   Repeat the previous two steps until all calls to <code>oldFindNearest()</code>
+   are eliminated.  Remove <code>oldFindNearest()</code>.
+</ol>
+<p>
+When you're done, you should be able to remove <code>EntityKind.java</code>
+HINT:  <code>grep</code> is a great tool for searching for places in your
+code where a certain type is used.
+
+
+<div class="header">
+<h3>Tips on Refactoring Methods</h3>
+</div>
+
+<p>
+There are some methods from the orginal given code that contain
+duplicate code that isn't immediately obvious.
+Consider the following tips for refactoring the less obvious duplications.
+This should be done after the initial refactoring (both in UML and in the 
+code base) of the more obvious duplications so that there is less code 
+to consider.
+</p>
+
+<ul>
+   <li>For two methods that appear to be doing roughly the same thing, but
+         that differ slightly in their implementation:  Examine the code
+         to determine if the code can be rewritten to match.  This 
+         requires careful consideration for what each method does (and does
+         <em>not</em> do) to avoid introducing bugs.
+   <li>
+      Some methods may have the same general structure (and match
+         identically in significant portions), but differ in some
+         segments.  For such methods, the general structure and identical
+         portions can be refactored into a parent class.  This parent class
+         will declare new <code>protected abstract</code> method(s) that
+         each subclass then implements to define the unique behavior.
+</ul>
+<p>
+This is an application of the 
+Consider applying the
+<a href="https://en.wikipedia.org/wiki/Template_method_pattern">Template
+Method Pattern</a> to further reduce duplicate code.
+
+<div class="header">
+<h3>Other Code Improvements</h3>
+</div>
+<p>
+With this code restructuring, you should consider moving static fields
+from other classes into the <code>Entity</code> hierarchy, if appropriate.  
+If a static field can be made private, with only a static setter method for
+initialization, it should be.
+<p>
+Similarly, you might be able to move or eliminate static methods from other
+classes.  If a method isn't providing any value, get rid of it!  Done right,
+OO design should lead to code that is simpler, more robust, and more likely
+to be correct.
+<p>
+Also see if you can find a way to simplify the Entity classes by eliminating
+fields.  Any field whose value is identical for all instances of a given class
+probably isn't necessary.
+It's wasteful to have an instance data member of a class if it has the
+same value for all instances of that class; better to share a single
+static data member.
+
+<div class="header">
+<h3>Be Thorough!</h3>
+</div>
+<p>
+One goal of this exercise is to eliminate code duplication wherever this
+can be resonably done.  In some places, the amount of duplicate code 
+eliminated might seem small.  In a larger program, these same techniques
+would have a bigger payoff in terms of code saved, and in terms of
+quality and maintainability of the program.  The purpose of this exercise
+is to understand these techniques for achieving code reuse, so go ahead
+and apply them, even if the actual amount of duplicate code eliminated
+is small.
+
+<div class="header">
+<h3>Improving <code>EventSchedule</code></h3>
+</div>
+<p>
+As noted in project assignment 1, your initial implementation of 
+<code>EventSchedule</code> wasn't very efficient.  Each time you look for
+the earliest event, you needed to do a scan of the entire list.  Now
+that you are familiar with comparators, it's easy to fix this, by using
+an appropriate data type.
+<p>
+The Java library has the perfect type for this need:
+<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/PriorityQueue.html">
+<code>java.util.PriorityQueue</code></a>.  Replace your old 
+<code>List</code> with a <code>PriorityQueue</code>, ordered by the event
+time.  Be sure to check out the methods <code>peek()</code>,
+<code>poll()</code> and <code>removeIf(...)</code>.  Your code will be
+tested for efficiency.
+<p>For this assignment, it's OK if
+<code>EventSchedule.unscheduleAllEvents()</code> requires an
+<i>O(n)</i> pass over the entire list -- <code>unscheduleAllEvents()</code>
+is called relatively infrequently in this program.  If this weren't true,
+you could maintain a map from each target to the set of events for that
+target.  This would speed <code>unscheduleAllEvents()</code>, but it would
+impose significant complexity, and extra overhead for the more common
+operations of adding and removing events.  Since it's not clear if this would
+even be a benefit, you are not being asked to do it.
+
+
+<div class="header">
+<h2>Submission</h2>
+</div>
+
+<p>
+Submit your program in <code>turninXXX/p4</code> to GitHub 
+by midnight on the due date.  Java source files should go in
+<code>turninXXX/p4/src</code>, and your documentation file
+should be in <code>turninXXX/p4/doc</code>.  You'll probably want to
+copy your <code>run.sh</code> file and the <code>images</code> directory to
+<code>turninXXX/p4</code>, so you can do your work directly there.
+When you submit the files to github, the image files won't be uploaded;
+git has been configured to ignore them, in the file 
+<code>turninXXX/.gitignore</code>.
+<p>
+Make sure your UML diagram agrees with your code!
+<p>
+If you'd like to submit the assignment one day late with a penalty of 5%, 
+add a file called <code>late_5_percent_off.txt</code> to the 
+<code>p4</code> directory.  If you'd like to submit the assignment two 
+days late with a penalty of 15%, add a file called
+<code>late_15_percent_off.txt</code> to the <code>p4</code>
+directory.  Make sure you add and push the late file.
+<p>
+After your code is working and submitted,
+check your submission using the <code>checkgit</code> command on the
+unix server.  If the autograder can't find your files for a reason that
+is caught by <code>checkgit</code>, you will get a zero on the assignment.  To
+check your submission, on a Unix server type:
+<blockquote><pre>checkgit &lt;git-login> 203 p4</pre></blockquote>
+<p>
+If it works, you will see the message "** Tests Passed **".  If not,
+you will see some kind of error message.  The error message might not tell
+you exactly what you need to change, but it should give an indication as
+to what is wrong.
+<p>
+The <code>p4</code> directory must contain at least the following files:
+
+<ul>
+<li><code>doc/classes.graphml</code>
+<li><code>src/Action.java</code>
+<li><code>src/Blacksmith.java</code>
+<li><code>src/Entity.java</code>
+<li><code>src/Event.java</code>
+<li><code>src/EventSchedule.java</code>
+<li><code>src/EventTimeComparator.java</code>
+<li><code>src/Main.java</code>
+<li><code>src/MinerFull.java</code>
+<li><code>src/MinerNotFull.java</code>
+<li><code>src/Obstacle.java</code>
+<li><code>src/Ore.java</code>
+<li><code>src/OreBlob.java</code>
+<li><code>src/Point.java</code>
+<li><code>src/Quake.java</code>
+<li><code>src/TestCases.java</code>
+<li><code>src/Vein.java</code>
+<li><code>src/VirtualWorld.java</code>
+<li><code>src/WorldModel.java</code>
+</ul>
+
+
+</div>
+</div>
+</body>
+</html>

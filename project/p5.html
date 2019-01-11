@@ -1,0 +1,481 @@
+<!doctype html>
+<html>
+<head>
+   <meta charset="utf-8"/>
+   <title>Class Project Assignment 5, CSC 203</title>
+   <link rel="stylesheet" href="../lib/assignment.css" type="text/css">
+</head>
+<body>
+<div class="container">
+<div class="boxed">
+<div class="header">
+  <h1>Class Project Assignment 5, CSC 203</h1>
+</div>
+<p>
+For this assignment you must modify the algorithm used to determine the path
+of all entities that move within the world.  This can be called their "pathing"
+behavior.  Further, you will implement the pathing algorithm in an OO way, so
+that it is decoupled from the specfic details of the miner program, and could
+therefore be re-used in other contexts.  This decoupling will help you explore
+how the algorithm works, and debug it, if necessary.
+</p>
+
+<div class="header">
+ <h2>Objectives</h2>
+ </div>
+ 
+<ul>
+<li>Modify the code to use the specified <code>PathingStrategy</code>
+    interface.
+<li>Integrate the use of this pathing strategy and understand the
+    associated code example.
+<li>Implement the
+    <a href="https://en.wikipedia.org/wiki/A*_search_algorithm">A* pathing
+    algorithm</a> in the exisiting code by implementing a 
+    new class that implements the <code>PathingStrategy</code> interface.
+<li>Create unit tests for your implementation of A*, and use them to explore
+    improvements to the algorithm.
+<li>Apply a debug framework to visualize the behavior of your code.
+</ul>
+
+<div class="header">
+<h2>Overview</h2>
+</div>
+
+<p>
+This assignment deviates from the pattern of previous assignments.  Though
+this assignment does use some design strategies, the primary
+goals are to improve the functionality of some entities in the virtual world,
+and to explore the algorithm used to do that.
+
+<p>
+In particular, as you are likely aware by now, the movement of
+the blobs and miners is not sophisticated.  You have likely seen an entity 
+get stuck on an obstacle or on another entity.  You will improve the
+pathing strategy in order to achieve a better result in this assignment.
+
+<p>
+Pathing algorithms are quite interesting, in and of themselves.  Our
+exploration of pathing in this assignment also motivates the use of
+some design patterns and techniques.  Applying these patterns will 
+improve the flexibility of the implementation.  Further, they will
+make it easier to used debugging and test frameworks, to better understand
+the algorithm.
+</p>
+
+<div class="header">
+<h2>Replacing an Algorithm &mdash; Strategy Pattern</h2>
+</div>
+
+<p>
+When an entity attempts to move, it needs to know the next step to take.
+How that next step is computed is, in many respects, irrelevant to the code
+within the corresponding entity.  In fact, we could imagine wanting
+to change that
+strategy for different builds of the program (to experiment), each time
+the program is executed (based on configuration), or dynamically during
+execution.  We could also imagine wanting to re-use an algorithm in a different
+program.  Using the
+<a href="https://en.wikipedia.org/wiki/Strategy_pattern">Strategy 
+pattern</a> allows you to separate out the pathing algorithm,
+and easily substitute in a new algorithm as desired.
+
+<p>
+Your implementation must use the given
+<a href="p5_given_code/src/PathingStrategy.java">PathingStrategy</a> interface without
+modification.  A copy is given below.
+</p>
+
+<blockquote>
+<pre>import java.util.List;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.ToIntBiFunction;
+
+interface PathingStrategy
+{
+    /**
+     * Returns a prefix of a path from the start point to a point within reach
+     * of the end point.  This path is valid ("clear") when returned, but
+     * may be invalidated in the future by the movement of other entities.
+     * Element 0 of the returned list contains a point along the path one
+     * step away from the start; the list may optionally contain more steps 
+     * along the path.  If there is no path from start to goal,
+     * a list of length zero is returned.
+     * &lt;p>
+     * The returned value doesn't include the start point or the end point.
+     *
+     * @param start   The start point for the path.
+     * @param end     The goal, the end point for the path.
+     * @param canPassThrough      A function that returns true if the
+     *                            given point isn't blocked.
+     * @param potentialNeighbors  A function that gives the potential neighbors
+     *                            for a given point.  This is just the set
+     *                            of points an entity could move to assuming
+     *                            nothing were blocked.
+     * @param stepsFromTo	  A function that gives the number of steps
+     *                            from one point to another, assuming no
+     *				  obstacles.
+     * @return The prefix of a path from start to end.
+     */
+    List&lt;Point> computePath(Point start, Point end,
+                            Predicate&lt;Point> canPassThrough,
+                            Function&lt;Point, List&lt;Point>> potentialNeighbors,
+			    ToIntBiFunction&lt;Point, Point> stepsFromTo);
+
+    /**
+     * Give this strategy a debug grid to draw into, or reset it back to
+     * null.  It might be helpful to use this to visualize what your
+     * algorithm is doing, particularly if you write some more complex
+     * unit tests.
+     */
+    public void setDebugGrid(DebugGrid debug);
+}</pre>
+</blockquote>
+<p>
+See <a href="p5_given_code/src"><code>p5_given_code/src</code></a> for additional code you can
+incorporate into your project to help you complete this assignment.
+
+<p>
+This strategy interface declares a single method, <code>computePath</code>, to
+compute at least the beginning of a path of 
+points (returned as a list) from the start point to the
+end point.  It also declares a second method for debugging purposes; see
+<a href="p5_given_code/src/TestPathing.java"><code>TestPathing.java</code></a> to see how
+that's used.
+<p>
+In order to compute this path, the pathing algorithm needs to know the
+directions an entity can move.  This is provided to it with the functional
+interface parameter 
+<code>potentialNeighbors</code>.   In addition, in order to explore
+potential paths, the algorithm must be able to determine if a
+given point can be traversed.  In our program, this is true if the
+point is both a valid position in the world and a location that is
+not blocked.  This is provided to it by the 
+<code>canPassThrough</code> functional interface argument.  Further,
+it may wish to calculate the number of steps between two points,
+via the <code>stepsFromTo</code> function.
+The pathing algorithm will determine that a path is complete when 
+a point is reached that is a neighbor of the
+<code>end</code> point.
+<p>
+
+</p>
+
+<div class="header">
+<h3>Single-Step Pathing</h3>
+</div>
+
+<p>
+As an example of defining a pathing strategy, consider the following
+implementation of the single-step pathing algorithm,
+<a href="p5_given_code/src/SingleStepPathingStrategy.java"><code>SingleStepPathingStrategy</code></a>.
+This is the same algorithm as was implemented in the given code for
+the class project.  You should use this as an initial pathing algorithm, as
+you convert your program to the new interface.
+</p>
+
+<p>
+Modify the appropriate entities to use a <code>PathingStrategy</code>.
+Of course, you are encouraged to make one modification at a time, then
+build and test!  Use the given
+implementation to verify that your changes work.
+</p>
+
+<blockquote>
+<pre>import java.util.List;
+import java.util.ArrayList;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.ToIntBiFunction;
+
+class SingleStepPathingStrategy implements PathingStrategy
+{
+    @Override
+    public List&lt;Point> computePath(
+                            final Point start, final Point end,
+                            Predicate&lt;Point> canPassThrough,
+                            Function&lt;Point, List&lt;Point>> potentialNeighbors,
+			    ToIntBiFunction&lt;Point, Point> stepsFromTo)
+    {
+        ArrayList&lt;Point> result = new ArrayList&lt;>();
+
+        // First, generate our list of neighbors, and see if the endpoint
+        // is one of them.  If so, we're one move away from our goal.
+        List&lt;Point> neighbors = potentialNeighbors.apply(start);
+        if (neighbors.contains(end)) {
+
+            // By our contract, we include neither the start nor the end 
+            // point, so if we're within reach of the end, the correct
+            // "path" is empty.
+            return result;
+        }
+
+        // Now, see which of our neighbors moves us closer.
+	int stepsAway = stepsFromTo.applyAsInt(start, end);
+        for (Point neighbor : potentialNeighbors.apply(start)) {
+            if (!canPassThrough.test(neighbor)) {
+                // ignore
+            } else if (neighbor.equals(start) || neighbor.equals(end)) {
+                // ignore
+            } else if (stepsFromTo.applyAsInt(neighbor, end) &lt; stepsAway) {
+                result.add(neighbor);
+                return result;
+                // Our "path" is only really one step toward the goal.  That's
+                // OK, because our contract says it's the *prefix* of the
+                // path.  A prefix can be just one step!
+            }
+        }
+	// Nothing helps, so we return an empty path to indicate failure.
+        return result;
+    }
+
+    @Override
+    public void setDebugGrid(DebugGrid grid) {
+	// Nothing much interesting to see here, so we don't use it.
+    }
+}</pre>
+</blockquote>
+
+<p>
+This implementation only matches the original pathing algorithm
+if <code>potentialNeighbors</code> returns the same neighbor points, in the
+same order as before.  You can experiment with different orders, or with
+adding other points to the
+<code>List</code> returned by <code>potentialNeighbors</code>.  For
+example, you could allow diagonal movement, or even allow only diagonal
+movement.  Each of these approaches can be tried
+simply by changing the function passed to <code>computePath</code>.  You're
+not required to do this, but feel free to experiment.  One of the nice things
+about well-encapsulated code is that this kind of experimentation is simple,
+and safe!
+<p>
+Before you integrate the this into your program, check out the
+<code>TestPathing</code> program.  You should be able to run
+<code>TestPathing</code> by adding your <code>Point</code> class to the
+given code, but you can also easily integrate the tests in <code>TestPathing</code>
+into your <code>Main</code> program.  A good way to do this is to modify 
+<code>Main.java</code> to check for another command-line argument that
+causes it to run the pathing tests.
+<p>
+<code>DebugGrid</code> provides you with code based on 
+<a href="https://spritely.jovial.com/">Spritely</a> that can be used to
+visualize a 2D grid of values.  Try it out, by changing the value of
+<code>DebugGrid.ENABLED</code> to <code>true</code>.  <code>DebugGrid</code>
+can be a valuable tool for visualizing the behavior of the more complicated
+pathing algorithm you'll be developing next.  This is much like what you did
+in <a href="../labs/lab08/instructions.html">Lab 8</a>.  Note that you can close the
+debug window at any time.  If you do, the program will keep running.  Indeed,
+it will run much more quickly, because it won't be generating a debugging 
+animation.</p>
+
+<div class="header">
+<h2>A* Pathing</h2>
+</div>
+
+<p>
+Once you have <code>SingleStepPathing</code> working and integrated, define 
+a new <code>PathingStrategy</code> subclass that implements 
+the 
+<a href="https://en.wikipedia.org/wiki/A*_search_algorithm">A* search algorithm</a>.
+As before, an entity will take only one step along the
+computed path at a time.  The <code>computePath</code> method will be invoked
+multiple times as the entity moves toward the intended destination.  
+As such, take care if you maintain any state relevant to the algorithm.
+<p>
+The internal data structures of A* can be visualized on a fixed-size grid.  Take
+advantage of this!  For each run of the A* pathing algorithm, you can display the
+current internal state of the internal data structures by coloring the corresponding
+grid in the <code>DebugGrid</code> according to which set that point is in.  Note that
+it's a good idea to put such debugging code inside an if statement that checks if
+debugging is enabled, like this:
+<blockquote><pre>    if (Debug.ENABLED) {
+        ...  Use the instance of DebugGrid
+    }</pre></blockquote
+<p>This is a good idea because the Java compiler will completely eliminate
+the debug code if <code>Debug.ENABLED</code> is false.  Because of this,
+you don't need to worry about your debugging code slowing down the program
+when it's running normally.
+<p>
+When you implement A*, don't forget what you learned in previous CS
+classes about data structures!  Pick data structures that are reasonably
+efficient.  A couple of minutes perusing the different collection classes
+in <code>java.util</code> to select an appropriate data structure can make
+a big difference in performance.  Part of your grade will be based on speed.
+<p>
+<strong>Additional A* Requirements:</strong>
+<ul>
+<li>Your implementation of A* must be in a class called
+    <code>AStarPathingStrategy</code>.
+<li>It must have a zero-argument constructor.  This constructor
+    will be used by the grader.
+<li>The <code>heuristic_cost_estimate()</code> function from the A* algorithm
+    must take two points and number of steps between the two (calculated
+    with the <code>stepsFromTo</code> function).  It must be called 
+    <code>double costEstimate(Point, Point, int)</code>, and 
+    it must be protected.  The grader will create a subclass 
+    of <code>AStarPathingStrategy</code> that overrides this method.
+<li>The value returned by <code>costEstimate()</code> must be non-negative, and must
+    not over-estimate the cost ignoring obstacles (given by
+    <code>stepsFromTo()</code>) by more than 5%.  That is to say:
+    <blockquote><code>costEstimate(p1, p2, stepsFromTo(p1, p2)) ≤ 1.05 * stepsFromTo(p1, p2)</code></blockquote>
+    must be true.
+</ul>
+<p>
+Hint:  When you get to thinking about algorithmic efficiency, it
+will be help to think about how you can tweak the heuristic in ways that aren't
+strictly related to how many steps there are between two points.
+<p>
+Your A* pathing strategy <strong>must be in 
+a class called <code>AStarPathingStrategy</code></strong>,
+and it <strong>must have a zero-argument constructor</strong>.  An automated
+test will use this constructor.  The <code>checkgit</code> program will check to
+make sure this class exists, that an instance can be created, that it can
+subclass your class, and that it can override <code>costEstimate()</code>.
+
+</p>
+
+<div class="header">
+<h3>Testing A*</h3>
+</div>
+
+<p>
+You are strongly encouraged to write unit tests for this strategy.  Since
+your implementation must conform to a specified interface, part of the
+grading will be based on instructor unit tests.  Remember, one of the goals
+of this assignment is to make an implementation of A* that could be reused
+in another program.Some things to consider
+in writing the unit tests:
+<ul>
+<li>Does the pathing strategy contract specify how
+    <code>canPassThrough</code> behaves when given the start
+    point or the end point?
+<li>What happens when the path is blocked?
+<li>Can the same <code>PathingStragegy</code> object be
+    used multiple times?  Is it required to be?
+</ul>
+<p>
+You should write unit tests to make sure that your implementation of A* will work
+in any program that follows the contract.
+</p>
+
+<div class="header">
+<h3>Algorithm Efficiency</h3>
+</div>
+<p>
+If time permits, you should explore one aspect of the efficiency of the
+algorithm itself.  A common scenario in the miner program is for a path
+to be relatively unobstructed.  Consider the <code>SIMPLE</code> test world,
+in <code>TestPathing</code>:
+<blockquote><pre>S.....
+......
+......
+......
+......
+.....G</pre></blockquote>
+<p>
+How many of the grid squares does your A* algorithm visit to determine
+a path in this very simple layout?  Can it be improved?  In order to
+understand this, it can help a great deal to visualize the contents of
+the open set and the closed set, relative to the start point, the goal
+and the obstacles.  <code>DebugGrid</code> is already set up to help you
+here.  Try using <code>DebugGrid</code> to understand how the A* algorithm
+proceeds.
+<p>
+Given what you see on the <code>SIMPLE</code> layout, what would the
+performance be like on an open 100x100 grid, with the start and goal in
+opposite corners?
+<p>
+In order to improve the performance of the A* algorithm in the common case
+of an open field, you can adjust the <code>costEstimate()</code> function.  
+Be sure to obey the contract:  Don't exceed the number of steps by more than
+5%, and never give a negative cost estimate.
+<p>
+A relatively small part of your grade will be based on the performance of your
+algorithm on a large open grid.  Note that there are other areas where
+algorithmic performance improvements could be explored, such as the behavior
+when the path is obstructed.  In this assignment, you are not being asked
+to explore these.  As noted before, obstructed paths are somewhat rare in the
+miner program.
+</p>
+<div class="header">
+<h3>Discussion:  Alternate Traversal Approaches</h3>
+</div>
+
+<p>
+After completing the above, you might notice an indecisive miner
+ping-ponging between two points.  This is an artifact of attempting
+to move to the nearest ore and only following one step of any computed
+path.  That one step moves the miner closer to a different ore, which
+results in the computation of a new path ... that brings the miner
+right back to the previous point.
+
+<p>
+Some alternatives are possible. Experimentation with and implementation of any of
+these is entirely optional, and won't be graded, but it's interesting to
+consider.  Any such changes would be in the entity code, not in the
+pathing strategy itself.
+</p>
+
+<ul>
+   <li>Non-fickle: Once a path is computed, continue to follow that path
+      as long as the target entity (e.g., ore) has not been collected by
+      another.  This approach skips the check for the "nearest target" as
+      long as the previous target is available.
+   <li>Determined: Once a path is computed, follow it to the end.  This
+      approach skips the check for "nearest target" until a new path must
+      be computed.
+   <li>Ol' College Try: Once a path is computed, follow it at least
+      X steps (or until exhausted) before giving up.  This approach
+      skips the check for "nearest" target until it has consumed a fixed
+      number of steps in the current path, or until it has consumed
+      the entire path.  After this initial effort, if the destination has
+      not been reached, then check for the "nearest target" and compute a
+      new path.
+</ul>
+
+<p>
+Of course, it is important to ensure that an implementation of any
+of these alternate approaches takes care not to move into an occupied cell.  
+Keep in mind that the path was clear when it was originally computed, but 
+other entities may move so as to block the path.
+</p>
+
+<div class="header">
+<h2>Submission</h2>
+</div>
+
+<p>
+Submit your program in <code>turninXXX/p5</code> to GitHub 
+by midnight on the due date.  Java source files should go in
+<code>turninXXX/p5/src</code>, and your documentation file
+should be in <code>turninXXX/p5/doc</code>.  You'll probably want to
+copy your <code>run.sh</code> file and the <code>images</code> directory to
+<code>turninXXX/p5</code>, so you can do your work directly there.
+When you submit the files to github, the image files won't be uploaded;
+git has been configured to ignore them, in the file 
+<code>turninXXX/.gitignore</code>.
+<p>
+If you'd like to submit the assignment one day late with a penalty of 5%, 
+add a file called <code>late_5_percent_off.txt</code> to the 
+<code>p5</code> directory.  If you'd like to submit the assignment two 
+days late with a penalty of 15%, add a file called
+<code>late_15_percent_off.txt</code> to the <code>p5</code>
+directory.  Make sure you add and push the late file.
+<p>
+After your code is working and submitted,
+check your submission using the <code>checkgit</code> command on the
+unix server.  If the autograder can't find your files for a reason that
+is caught by <code>checkgit</code>, you will get a zero on the assignment.  To
+check your submission, on a Unix server type:
+<blockquote><pre>checkgit &lt;git-login> 203 p5</pre></blockquote>
+<p>
+If it works, you will see the message "** Tests Passed **".  If not,
+you will see some kind of error message.  The error message might not tell
+you exactly what you need to change, but it should give an indication as
+to what is wrong.
+</p>
+</div>
+</div>
+</body>
+</html>

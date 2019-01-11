@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="spritely">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../lib/spritely.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

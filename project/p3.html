@@ -1,0 +1,486 @@
+<!doctype html>
+<html>
+<head>
+   <meta charset="utf-8"/>
+   <title>Class Project Assignment 3, CSC 203</title>
+   <link rel="stylesheet" href="../lib/assignment.css" type="text/css">
+</head>
+<body>
+<div class="container">
+<div class="boxed">
+<div class="header">
+  <h1>Class Project Assignment 3, CSC 203</h1>
+</div>
+
+<p>
+In the first pair of assignments you identified methods and moved them
+into the most approprite classes.  In doing so, you may
+have noticed that some classes support functionality that
+are not appropriate for all instances of the class.  In other words, some
+of the methods don't apply fo all instances of the class.  Moreover, these
+classes support data attributes that is not used by all instances
+of the class.
+
+<p>
+This is an issue of <em>cohesion</em>.  Specifically, these classes 
+exhibit low (poor) cohesion by representing
+multiple concepts together in one class.  This class combines all 
+attributes and methods used by each of the different concepts.  The 
+concepts they combine might be related,
+but they're diffrenent enough that we can get better code by splitting
+things up.  Tips for identifying classes with low cohesion
+are given later.
+
+<p>
+This design and programming assignment
+asks that you improve the code by splitting
+classes exhibiting low cohesion into multiple highly cohesive classes.
+Doing so requires you to identify common methods for
+each subset of these new classes, and then introduce a new <b>interface</b>
+for each logical grouping of these methods.  More on this below.
+<p>
+We'll also use interfaces to reduce coupling between modules.  That is,
+instead of exposing a class to everything contained in another class, we'll
+use <i>role interfaces</i> to reduce what is visible to that other class.
+After having done that, we'll find that it's easier to extend the program
+with new functionality.  We'll do just that, by adding a new animatable
+background to the program.
+
+<p>
+In our refactoring, we're going to ignore one class for
+now:  <code>Entity</code>.  This class has an obvious
+problem with cohesion, and it needs to be split up, but we need a 
+different tool to properly deal with
+that.  For this reason, we'll be leaving <code>Entity</code> as one
+big class, and keeping <code>EntityKind</code> this assignment.
+
+<div class="header">
+ <h2>Objectives</h2>
+ </div>
+ 
+<ul>
+<li>Deepen your understanding of the large project code.
+<li>Identify where cohesion is low in an exisiting class design.
+<li>Modify an exisiting UML diagram (adding classes and interfaces 
+    where needed to improve the overall code design in terms of cohesion).
+<li>Create new classes and interfaces, and eliminate the need for
+    for the enumerated type for <code>ActionKind</code>.
+<li>Apply these changes to the Java code.
+<li>Make design changes to a moderately large code base and 
+    have the code still work.
+</ul>
+
+
+<div class="header">
+<h2>Task Overview</h2>
+</div>
+
+<p>
+You must identify those classes with low cohesion and then split these
+classes into separate classes exhibiting high cohesion.  When you do
+this in a program, each of
+these new classes introduces a separate type.
+You then typically need to have a single supertype for these new types,
+so that there is a common Java type for code that use your types.
+A Java interface is a good tool for this, when the two subtypes
+share very little.
+
+<p>
+Based on the original source code, if you distributed your methods
+well in the previous assignment, the principal location where there
+is low cohesion is those classes that depend on <code>ActionKind</code>
+or <code>EntityKind</code>.  We're leaving <code>EntityKind</code> alone
+for now, but it will be eliminated in the next assignment.
+<p>
+The original source code uses <code>ActionKind</code> and
+<code>EntityKind</code> to allow each <code>Action</code> instance
+and each <code>Entity</code> instance to play one of potentially many
+roles.  As a starting point of your refactoring, you are to eliminate 
+<code>ActionKind</code>.  When you do this, and you use polymorphism,
+you will find that the method names become simpler.  Please keep the
+name <code>Action</code> for the common supertype of objects that
+represent some kind of action; this makes it possible for the grading
+program to find this type.
+<p>
+As a next step, consider the class that you created for instances that were
+<code>ActionKind.ANIMATION</code> in the old code.  You will notice that it
+has the field that used to be <code>Action.entity</code>, of type 
+<code>Entity</code>.  But how much does this action subclass need to know
+about entities?  Very little, it turns out; it only uses a small subset of
+the methods of </code>Entity</code>.  So, in keeping with the
+Interface Segregaton Principle, fix this:  Define an interface that
+expresses what your animation action needs to know about entities,
+and have <code>Entity</code> implement this interface.  Then, make
+the action depend only on this new interface, and not on <code>Entity</code>.
+<p>
+When you do this, you'll notice another part of the code that unnecessarily
+depends on <code>Entity</code>.  Fix this too!  If that other module needs
+to know even less about <code>Entity</code>, express that as a different,
+smaller interface.  Remember, it's OK for one interface to inherit from
+another, or to have a class that implements multiple interfaces.  It's 
+also perfectly fine to have an interface that defines
+a very small number of methods, or even none at all, if it makes the code
+clearer and reduces coupling.
+<p>
+As you introduce these <i>role interfaces</i>, pick good names.  Remember,
+a class name should be a noun.  Often, a role interfaces expresses the idea
+"thing that you can do X to."  Something that can be activated is 
+"Activatable," something that can be rendered is "Renderable," etc.  If you
+can't find a good name, the suffix "-able" will often help.
+<p>
+As before, you are encouraged to develop both the UML design document and
+the code refactoring at the same time. You are further encouraged to
+implement the refactoring incrementally so that your refactored program
+executes properly at each step. You will submit the design document and the
+code together.
+
+<div class="header">
+<h3>Introducing Interfaces</h3>
+</div>
+
+<p>
+The following are some tips on approaching the introduction of interfaces
+to support splitting classes.
+</p>
+
+<p>An interface shouldn't have a method that isn't applicable
+to all of the classes that implement that interface.  In more advanced
+situations, it's not uncommon for the implementation of a method for certain 
+types of objects (certain classes) to be "do nothing," but in this kind
+of simple object decomposition, this should be extremely rare.  Further,
+in cases like ours a class should not implement an interface and then define 
+a method required by the interface that raises an exception indicating that 
+the method is not supported.
+
+<p>
+Your introduction of interfaces for this project must
+be meaningful.  It is insufficient to define a single interface with all
+methods that are then only partially implemented by each of the classes.
+<p>
+In order to refactor incrementally, consider these tips:
+
+<ul>
+   <li>First, copy the original class to each of the new classes, and turn
+       the original class into an interface.
+   <li>Make the new classes implement the interface.
+   <li>Adjust code that uses the old class, as needed.  For example, you'll
+       need to change how instances are created.
+   <li>Compile and run the program, and make sure it still works.
+   <li>In each new class, eliminate each data attribute not used by
+       the class and each method not supported by this class.  
+   <li>Change the interface so it declares declaring only those
+      methods shared by every new class.
+   <li>Often, in the new class the implementation of the shared method will
+      be to just call a more specific method.  Get rid of the more specific
+      method name; just change the name of the method with the real
+      implementation so that it matches the shared method signature.
+   <li>Compile and run the program, and make sure it still works.
+</ul>
+
+
+
+<div class="header">
+<h2>Design Document</h2>
+</div>
+
+<p>
+Your "design document" will consist only of an updated UML diagram.
+Copy the UML diagram from the prior design assignment to the directory
+<code>p3/doc</code> in your turnin directory.
+
+<p>
+   You can add an <b>interface</b> to the UML document by adding a class
+and then, under the <em>UML</em> tab in properties, setting the
+<em>Stereotype</em> field to "interface".  For each interface that a class
+implements, be sure to draw an
+<a href="https://en.wikipedia.org/wiki/Class_diagram#Relationships">
+appropriate arrow</a> (dashed line with open triangle head) from the class
+to the interface.  If an interface extends another interface in your design,
+then be sure to connect them with an appropriate arrow (solid line with open
+triangle head).  UML notation is also described on page 135 in your book.
+<p>
+<code>checkgit</code> will print out what your diagram indicates are the
+supertypes of every type.  Make sure it tells you what you expect.  If you
+use the wrong kind of arrow, or an arrow that points the wrong way,
+paying attention to what <code>checkgit</code> says will catch the error
+for you.  You will be graded on what you indicate in your diagram, and
+there will be no resubmissions for errors that <code>checkgit</code> indicates.
+<p>
+<center><a href="https://en.wikipedia.org/wiki/Class_diagram#Relationships"><img src="html_images/uml_from_wikipedia.png"></a></center>
+
+<div class="header">
+  <h2>Animating the Background</h2>
+</div>
+<p>
+Now that the animation code isn't tied to <code>Entity</code>, you 
+can more easily add
+a new kind of animatable object to the program.  Your assignment in this part is
+to animate the background, so that it gets brighter and darker over a
+period of 30 seconds, when the program is run at normal speed.  You can
+think of this as simulating daylight, with a very bright full moon
+at night.  Here's
+a portion of the world, during "night" and "day":
+<p>
+<center>
+<img src="html_images/p3_night.png">
+</center>
+
+<p>
+<center>
+<img src="html_images/p3_day.png">
+</center>
+
+<p>
+In order to achieve the effect of brightening the grass, you can take
+advantage of a technique called "alpha blending."  In the darker image,
+the grass tiles are left alone.  In the brighter image, a semi-transparent
+yellow tile is drawn over each grass tile.  Be sure you read the Spritely
+documentation, to see how to place a solid colored tile over an image tile.
+<p>
+"Alpha" is a measure of the
+transparency of a color - for 
+<code><a href="https://docs.oracle.com/javase/8/docs/api/java/awt/Color.html#Color-int-int-int-int-">java.awt.Color</a></code>,
+an alpha value of 0 means the color is fully transparent, and a value
+of 255 means it's fully opaque.
+<p>
+Take a look at the code where the background is drawn.  You'll see that it
+uses Spritely's <a href="http://spritely.jovial.com/javadocs/edu/calpoly/spritely/AnimationFrame.html#addTile-int-int-edu.calpoly.spritely.Tile-"><code>AnimationFrame.addTile()</code></a>
+to draw a single tile with the grass image in each square where the background
+is grass.  You'll also note that <code>addTile</code> can be called multiple
+times.  So, you can "brighten" grass by adding a semi-transparent tile 
+that is yellow over the grass tile, and you can vary the amount of brightness
+by adjusting the color value.  Spritely provides you with a type of tile
+that is a solid color (which can, of course, be semi-transparent).
+<p>
+You will have to identify which objects in the background array are
+grass tiles.  This might require communicating some information when
+the world is set up, since it's the setup code that knows which background
+tiles are which.
+<p>
+In order to make the animation happen, you need to make the class that
+draws the background do something like what entity does.  You need it to
+be called regularly -- once every 100ms of simulated time will
+do nicely.  And a good way to gradually brighten and darken the image is to set
+an alpha value according to a formula 
+like <code><i>1.0 - 0.5 * cos(theta)</i></code>,
+where theta varies between 0 and 2π with a period of 30 seconds.
+<p>
+When you do this, <i><b>should re-use the same class implementing
+the <code>Action</code> interface that you created for animation of 
+entities</b></i>.  There are other valid designs that achieve the same
+effect, but you are being asked to re-use the same animation action that
+you used for entities.  It might help to
+create a new class whose sole job it is to vary the alpha of the tile you
+overlay on the grass.  What interface(s) does this class need to implement?
+Should you define a new interface?
+<p>
+Note that it's OK to change method names.  Indeed, it's often the case that
+when you refactor code by introducing interfaces, a method name that used
+to make sense is too specific, so you need to change it to something more
+generic.  For example, the original <code>Functions.java</code> had a
+method called <code>nextImage()</code>.  This describes the implementation
+of the method, but it doesn't really explain the need the method fulfills.
+A method name that describes what the method is <i>accomplishes</i>, rather
+than how it accomplishes it is better, because it invites you to use the
+same interface for classes where you need to accomplish the same goal, in
+a different manner.  The old <code>Functions.nextFrame()</code> essentially
+moved the internal representation of an entity forward in time in order to
+perpare it to display the next frame.  It might help if you think of a
+name that expresses this idea.
+<div class="header">
+  <h2><code>VirtualWorld</code> Refactoring</h2>
+</div>
+<p>
+As a final bit of code cleanup, pay some attention to <code>VirtualWorld</code>.
+In the given code, this class had all static members.  This works, but
+it's jarring to have a lot of static methods and static state in a class.
+It is true that there's only one virtual world that is simulated, so making
+everything static works, but it's bad style.  One could
+imagine simulating multiple words simultaneously, but even if this isn't
+a priority, it's better to have instance members in a class that's
+part of your simulation.  
+<p>
+With that said, it makes sense to have static members for things that are
+constant.  For example, the different tiles that are loaded by
+<code>VirtualWorld</code> would be the same, even if you had multiple
+worlds running simultaneously.  In a case like this, you should split the
+the initialization of <code>VirtualWorld</code> into a static part, and
+a part for the instance.  The instance part goes in the constructor, but
+what about the static part?  This is what Java <i>static initializers</i>
+are for.  In a class definition, you can create a static initializer like
+this:
+<blockquote><pre>public class MyClass {
+    public final String myString;
+    public final String myString2;
+    private int number;
+
+    static {
+        number = 1;
+        myString = makeMyString();
+        myString2 = makeMyString();
+    }
+
+    private static string makeAString() {
+        return "string value number " + (number++);
+    }
+
+    ...
+
+}</pre></blockquote>
+<p>
+You can put whatever computation you want inside this static initializer.
+It is guaranteed to run before any code tries to access any of your static
+data members, and before the constructor of the class runs.
+<p>
+You'll probably want to treat the tiles that hold the images of the grass and
+the rocks more like the entity images, each with its own static data member.
+<p>
+It's OK to have constant static data members that are public.  Some
+prefer to make them private, and create static accessor methods, but for this
+kind of straightforward data holder, it's not necessary, nor particularly
+helpful.  For consistency's
+sake, <code>checkgit</code> will <strong>require</strong> that
+<code>VirtualWorld</code> have the same static data members as before to
+hold the different tile types.  However, such exposed
+constant data members should be made so that they can't be changed.  But
+what about the objects they refer to?  For the entity tiles, what about the
+<code>List&lt;Tile&gt;</code> instances?  It is for a case like this that
+Java supports immutable lists.  See 
+<a href="https://docs.oracle.com/javase/8/docs/api/java/util/Collections.html#unmodifiableList-java.util.List-"><code>java.util.Collections.unmodifiableList()</code></a>.
+<p>
+You should make the static member that holds each list so that it can't
+be changed, and you should also make the list so that it can't be changed.
+But what about the <code>Tile</code> instances that are held within the list?
+Can they be changed?  Investigate this, and make changes, if any are needed.
+<p>
+The grader will check for these fields, so please call them
+<code>blacksmithTiles</code>,
+<code>blobTiles</code>,
+<code>minerTiles</code>,
+<code>minerFullTiles</code>,
+<code>obstacleTiles</code>,
+<code>oreTiles</code>,
+<code>quakeTiles</code>, and
+<code>veinTiles</code>.
+
+<div class="header">
+  <h2>Animation Unit Test</h2>
+</div>
+<p>
+One of the advantages of encapsulation is that it makes it easier to
+write small unit tests, to test one part of the program.  Now that 
+your animation action class don't
+depend on the <code>Entity</code> type, you can write small,
+stand-alone tests of just the functionality of scheduling
+animation actions.
+<p>
+Specifically, you can write a new, dummy animation class that just counts up
+how many times it's asked to update.  In a test method 
+of <code>TestCases</code>,
+you can also create an <code>EventSchedule</code> instance, and schedule
+an animation action for your dummy animation.  Then, you can run
+that scheduler up to a certain time value.  Next, you can write assertions
+about how many times your dummy animation is called.
+<p>
+Write at least two independent unit tests that do this, 
+in <code>TestCases.java</code>.  Call them from <code>TestCases.run()</code>.
+Don't change the name of <code>TestCases.run()</code> -- the grading program
+might call this method to check your work!  Write at least the following
+unit tests, using <code>Testy</code>:
+<ul>
+<li>Write a test that creates an animation with a period of 1 ms, and a
+    repeat count of 30.  Advance the event schedule from the beginning up to
+    100 ms.  Verify that the animation was asked to update 30 times.
+<li>Write a test that creates an animation with a period of 1 ms that is
+    set up to repeat forever.  Advance the event schedule from the beginning 
+    up to 100 ms.  Verify that the animation was asked to update 100 times.
+</ul>
+
+<p>
+If you're ever unsure how some code works, a good way to explore it is to
+write this kind of small, self-contained program that exercises the code.  
+Instead of writing a program that you throw away, you can write a unit 
+test.  In this way, the unit
+test serves as a kind of documentation -- it expresses in code what some
+other code is supposed to do.  It also gives you a valuable resource, because
+if you ever change that code, you get some validation that it works correctly
+"for free," by just running your unit tests.
+
+<div class="header">
+<h2>About Images, Repos and the Unix Server</h2>
+</div>
+<p>
+If you feel ready, now would be a great time to get your computer set up,
+instead of using the Unix servers or the lab machines.  It's faster, you
+don't need to be connected to the network, and it lets you see the graphics.
+You still need to run <code>checkgit</code> on the Unix server, but there's
+no particular reason to main a repo there.  (Checkgit clones a copy of your
+repo every time you run it).
+<p>
+If you are switching between computers, though, the easiest and most realiable
+way to keep the two versions of turnin consistent is by using git.  When you
+make changes on one computer, add, commit and push your changes there, and then
+pull those changes on the other computer.
+<p>
+When you do this, you may notice that the image files don't get checked in.
+That's intentional, because you don't need to change the images, and they're
+somewhat large.  So, if you are using multiple computers, you'll have to
+copy the <code>images</code> directory into each project in each copy of your
+turnin repository, either using the <code>cp</code> command as previously
+described, or by using your computer's file browser.
+
+<div class="header">
+<h2>Submission</h2>
+</div>
+
+<p>
+Submit your program in <code>turninXXX/p3</code> to GitHub 
+by midnight on the due date.  Java source files should go in
+<code>turninXXX/p3/src</code>, and your documentation file
+should be in <code>turninXXX/p3/doc</code>.  You'll probably want to
+copy your <code>run.sh</code> file and the <code>images</code> directory to
+<code>turninXXX/p3</code>, so you can do your work directly there.
+When you submit the files to github, the image files won't be uploaded;
+git has been configured to ignore them, in the file 
+<code>turninXXX/.gitignore</code>.
+<p>
+If you'd like to submit the assignment one day late with a penalty of 5%, 
+add a file called <code>late_5_percent_off.txt</code> to the 
+<code>p3</code> directory.  If you'd like to submit the assignment two 
+days late with a penalty of 15%, add a file called
+<code>late_15_percent_off.txt</code> to the <code>p3</code>
+directory.  Make sure you add and push the late file.
+<p>
+After your code is working and submitted,
+check your submission using the <code>checkgit</code> command on the
+unix server.  If the autograder can't find your files for a reason that
+is caught by <code>checkgit</code>, you will get a zero on the assignment.  To
+check your submission, on a Unix server type:
+<blockquote><pre>checkgit &lt;git-login> 203 p3</pre></blockquote>
+<p>
+If it works, you will see the message "** Tests Passed **".  If not,
+you will see some kind of error message.  The error message might not tell
+you exactly what you need to change, but it should give an indication as
+to what is wrong.
+<p>
+The <code>p3</code> directory must contain at least the following files:
+
+<ul>
+<li><code>doc/classes.graphml</code>
+<li><code>src/Action.java</code>
+<li><code>src/Entity.java</code>
+<li><code>src/EntityKind.java</code>
+<li><code>src/Event.java</code>
+<li><code>src/EventSchedule.java</code>
+<li><code>src/Main.java</code>
+<li><code>src/Point.java</code>
+<li><code>src/TestCases.java</code>
+<li><code>src/VirtualWorld.java</code>
+<li><code>src/WorldModel.java</code>
+</ul>
+
+
+</div>
+</div>
+</body>
+</html>

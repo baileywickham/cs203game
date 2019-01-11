@@ -1,0 +1,231 @@
+<!doctype html>
+<html>
+<head>
+   <meta charset="utf-8"/>
+   <title>Class Project Assignment 6, CSC 203</title>
+   <link rel="stylesheet" href="../lib/assignment.css" type="text/css">
+</head>
+<body>
+<div class="container">
+<div class="boxed">
+<div class="header">
+  <h1>Class Project Assignment 6, CSC 203</h1>
+</div>
+
+<p>
+For this assignment you will modify the virtual world to support a
+"world-changing" event.  This event is to be triggered by a mouse press.
+When the mouse button is pressed at a location on the screan, it should
+affect the tiles near to the button press. The event must be shown
+in the virtual world by changing
+the affected background tiles and by modifying the affected entities
+(more below).  In addition, the world event must create a new type
+of entity.
+</p>
+<div class="header">
+ <h2>Objectives</h2>
+ </div>
+ 
+<ul>
+<li>Add new functionality to existing code base demonstrating an
+understanding of the exisiting design and functionality.
+<li>Evaluate the current design based on the experience of
+adding to the code 
+</ul>
+
+<div class="header">
+<h2>Concurrent Modification Exception</h2>
+</div>
+
+<p>
+One thing to watch out for is a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/ConcurrentModificationException.html">java.util.ConcurrentModificationException</a>.
+This exception can be generated if you attempt to modify a collection,
+like a set, while you
+are iterating over that same collection.  This could happen, for example, 
+if you attempted to make a modification to the set of entities while you are
+iterating over that set.
+<p>
+There are several ways to solve this problem.  In this case, one reasonable
+solution is to refrain from adding to or removing from the set during
+iteration.  Instead, you can defer any modification of the set until
+the iteration is finished.  This can be done by creating an action or an
+event to perform the modification, once the iteration is finished.  That
+action needs to be stored on a list of pending work, and processed once
+the iteration is complete.
+<p>
+Another reasonable
+solution is to simply copy all of the elements of the set into an 
+<code>ArrayList</code>, 
+and iterate over the list.  This is a fairly standard technique, except
+when dealing with very large sets.  For example, consider the following code:
+</p>
+<blockquote><pre>void modifyList(Set&lt;Something> theSet) {
+    ArrayList&lt;<Something> copy = new ArrayList(theSet);
+    for (Something s : copy) {
+        if (I don't like s) {
+            theSet.remove(s);
+        }
+        if (I want to add something to the set) {
+            Something newElement = ...
+            theSet.add(s);
+        }
+    }
+}</pre></blockquote>
+<p>
+If we were to iterate directly over the set, we would not be able to add
+and remove elements during the iteration.
+</p>
+
+<div class="header">
+<h2>World Changing Event: Detecting a Mouse click</h2>
+</div>
+<p>
+Spritely defines a mechanism for detecting a mouse click:
+<a href="http://spritely.jovial.com/javadocs/edu/calpoly/spritely/SpriteWindow.html#setMouseClickedHandler-edu.calpoly.spritely.MouseClickedHandler-"><code>SpriteWindow.setMouseClickHandler()</code></a>.
+It takes a parameter of a type that is a functional interface, so added a
+callback is straightforward.
+<p>
+In text mode, Spritely even provied a mechanism to simulate a mouse
+click.  If you have added a mouse click handler to your
+<code>SpriteWindow</code>, it will tell you that you can simulate
+a mouse click by pressing the "m" key.  If you're running in text mode,
+give it a try!
+</p>
+
+<div class="header">
+<h2>World Changing Event: Visualization</h2>
+</div>
+
+<p>
+Decide on a world-changing event, like a river spawning, a volcano erupting,
+or a rainbow being cast across the land.  This event must be triggered
+by a mouse-click and must affect at least 7 background tiles of the world 
+in proximity to the mouse position when the click occurs, unless the click
+occurs at the edge of the world.  Note that background
+tiles might be obscured by an entity, so there might be a visible change in
+fewer than 7 tiles.  The event should affect no more than half of the world.
+
+<p>
+The world event must be shown by modifying the background image associated
+with the affected tiles.  You are free to modify them however you would
+like, and are encouraged to be creative.  Remember that the size of a
+tile in pixels is given by <code>TILE_SIZE</code>.  You can download new
+images to use in tiles, or you can use one of the unused images that came
+with the initial project code.  If you download a new image, make sure the
+file name doesn't conflict with an existing image.  Make sure you check
+in any new images; you'll need a special git command to do this.  This
+is described under <i>Submission</i>, below.
+</p>
+
+<div class="header">
+<h2>World Changing Event: Effect</h2>
+</div>
+
+<p>
+At least one type of existing mobile entity (e.g., miners or blobs)
+must be affected by the world event, if it is close enough to the event
+location.  This entity should change in appearance and behavior.
+
+<p>
+For example, a rainbow might change nearby miners into fairies that seek
+out crystals.  Or the event might make the blacksmith start to move,
+while maintaining the miner’s prior behavior of bringing ore to a blacksmith.
+
+
+<div class="header">
+<h2>World Changing Event: New Entity</h2>
+</div>
+
+<p>
+The world event must cause a new type of mobile entity to spawn.  This
+new entity should animate and move according to logic defined by you.
+
+<p>
+For instance, the new entity might seek out blobs to turn them into 
+crystals, chase down miners to infect them with the plague, or travel
+the world spreading apple seeds.
+<p>
+Further, the new entity must move differently than the existing entities,
+with at least some diagonal motion.  Think about how to use the A* pathing
+algorithm effectively with your new entity movement.
+
+<p>
+<b>Note:</b> This new entity is in addition to the entity transformation
+triggered by the event as just discussed.
+
+<div class="header">
+<h2>Description</h2>
+</div>
+
+<p>
+Include a text file named <code>WORLD_EVENT.txt</code> in the <code>doc</code>
+directory of your submission that
+describes 1) how to trigger the event, 2) what should happen when the
+event is triggered, 3) what the affected entities should do, and 4) what
+the new entity is and how it should behave.
+
+<div class="header">
+<h2>Design</h2>
+</div>
+
+<p>
+Be sure to adhere to the design principles discussed this quarter.
+Refactor your code as needed, and resist the urge for quick hacks that
+would increase maintenance costs.
+
+<p>
+You are encouraged to reflect on the quality of your design and the
+effort required to add the functionality for this assignment.  How do
+you think this effort compares to that needed to add the same functionality
+to the originally given code?  Consider what would be required in the old
+code to add a new entity whose movement is quite different than the original
+set of entities.
+
+<div class="header">
+<h2>Submission</h2>
+</div>
+
+<p>
+Submit your program in <code>turninXXX/p6</code> to GitHub 
+by midnight on the due date.  Java source files should go in
+<code>turninXXX/p6/src</code>, and your documentation file
+should be in <code>turninXXX/p6/doc</code>.  You'll probably want to
+copy your <code>run.sh</code> file and the <code>images</code> directory to
+<code>turninXXX/p6</code>, so you can do your work directly there.
+<p>
+If you need to submit image files, you will need to use a special command
+to add them.  That's because the file 
+<code>turninXXX/.gitignore</code> is configured to ignore image
+files.  In order to add an image file to your repository anyway, use
+the "force" option in to the add command, <code>git add -f</code>.  For
+example, to commit the file <code>images/chupacabra.png</code> to your
+repo, type:
+<blockquote><pre>git add -f images/chupacabra.png</pre></blockquote>.
+After you have added the file, you can commit and push as normal.  It
+would be a good idea to use the "-run" option of <code>checkgit</code> - even
+in text mode, your program loads the images, and will fail if it doesn't
+find one.
+<p>
+If you'd like to submit the assignment one day late with a penalty of 5%, 
+add a file called <code>late_5_percent_off.txt</code> to the 
+<code>p6</code> directory.  If you'd like to submit the assignment two 
+days late with a penalty of 15%, add a file called
+<code>late_15_percent_off.txt</code> to the <code>p6</code>
+directory.  Make sure you add and push the late file.
+<p>
+After your code is working and submitted,
+check your submission using the <code>checkgit</code> command on the
+unix server.  If the autograder can't find your files for a reason that
+is caught by <code>checkgit</code>, you will get a zero on the assignment.  To
+check your submission, on a Unix server type:
+<blockquote><pre>checkgit &lt;git-login> 203 p6</pre></blockquote>
+<p>
+If it works, you will see the message "** Tests Passed **".  If not,
+you will see some kind of error message.  The error message might not tell
+you exactly what you need to change, but it should give an indication as
+to what is wrong.
+</p>
+</div>
+</div>
+</body>
+</html>

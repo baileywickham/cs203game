@@ -1,0 +1,312 @@
+<!doctype html>
+<html>
+<head>
+   <meta charset="utf-8"/>
+   <title>Class Project Assignment 2, CSC 203</title>
+   <link rel="stylesheet" href="../lib/assignment.css" type="text/css">
+</head>
+
+<body>
+<div class="container">
+<div class="boxed">
+<div class="header">
+  <h1>Class Project Assignment 2, CSC 203</h1>
+</div>
+
+<p>
+This programming is the complement 
+<a href="p1.html">Assignment 1</a>, where you made a UML diagram.
+In this assignment, you'll be turning in the refactored code.  As
+you refactor the code, you may want to change some of the decisions
+you made in assignment 1.  That's fine, but keep your UML diagram in
+sync with your code changes.
+
+<div class="header">
+<h3>Task Overview</h3>
+</div>
+<p>
+You must identify the behavior associated with each class (i.e.,
+the behavior exhibited by instances of the class) and move that behavior
+from the standalone static methods in <code>Functions.java</code> to
+methods defined within the class.  For this assignment, you will also
+add a little bit of new functionality:  You'll finish up some work that was
+left incomplete in the original program.  You also will need to add some
+accessor and mutator methods.
+<p>
+As you write the code for assignment 2, you will likely be tempted to
+change the UML diagram.  <b>Please do!</b>  It is normal to revisit
+assumptions you made earlier in the process.  This is how a design gets
+better over time.  When you make such a change, be sure to keep your
+diagram in sync.  Your diagram will be checked to see if it agrees with
+your code.
+<p>
+<font color="red">WARNING:</font>  Not all sections of 203 have the same
+assignments.  It's possible that tutors or other
+resources might not know this.  Make sure you double-check the assignment
+instructions if you ask someone for clarification; they might have done a
+different assignment, or their memory might be off.
+
+<div class="header">
+<h2>Objectives</h2>
+</div>
+
+<ul>
+<li>To be able to read and understand java code in terms of methods and class instances
+<li>To be able to identify and convert static methods into instance methods to better associate computation with data
+<li>To be able to translate your code design from UML into refactored Java code
+<li>Specifically, for this assignment, in the actual java code, move all static methods in the file <code>Functions.java</code> to the appropriate classes.
+<li>To be able to make design changes to a large code base and have the code still work
+</ul>
+
+<div class="header">
+<h2>Source Code Refactoring</h2>
+</div>
+
+<p>
+You must refactor the methods from the <code>Functions</code> class
+to move them into the appropriate classes as previously discussed.  As
+each method is moved, you will need to make modifications to the code
+that uses the method.  Your refactoring should mirror the work done for 
+your design document (UML diagram) augmented with what you've learned 
+since then.
+
+<p>
+Your refactoring must not add or remove any functionality.  Your
+refactoring may add accessor/mutator methods, but only as needed.
+The resulting program must work as before.
+
+<p>
+It is not sufficient to simply move the static methods from
+<code>Functions</code> to the other classes and then continue to invoke
+them as public static methods.  For instance, if you determine that a
+method works primarily on data within an <code>Entity</code> object, then
+the method must be made non-static and the explicit <code>Entity</code>
+argument will be replaced by the implicit reference to <code>this</code>.  
+This modification will necessitate appropriate changes to the invocation of
+the method.
+
+<p>
+As an example, moving the following (fake) method into <code>Entity</code>
+will change it as shown.
+
+<blockquote>
+   <pre>
+      class Functions
+      {
+         public static void turnAround(Entity entity, int numRotations)
+         {
+            ... id ...   (this.id is also correct, but less common)
+         }
+
+         ...
+            // invocation of turnAround
+            turnAround(entity, 20);
+
+      }
+   </pre>
+</blockquote>
+
+<p>
+   becomes
+
+<blockquote>
+   <pre>
+      class Entity
+      {
+         public void turnAround(int numRotations)
+         {
+            ... this.id ...
+         }
+
+         ...
+            // invocation of turnAround
+            entity.turnAround(20);
+
+      }
+   </pre>
+</blockquote>
+<p>
+Of course, when you refer to static methods that haven't been moved
+out of <code>Functions.java</code> yet, you'll have to add
+<code>Functions.</code> before the method call.  Then, when that method
+moves to its new home, you'll have to change that call again.
+
+<div class="header">
+<h3>Tips on Refactoring Methods</h3>
+</div>
+
+<p>
+First and foremost, only make one change at a time.  You should never be
+more than five minutes or so away from a working version of your program.
+Make your changes as small as they can, and then compile and run the program.
+That way, if something goes wrong, you'll know that the problem is in
+something you just changed.
+<p>
+When searching for where something is accessed, consider using the
+<code>grep</code> command to search for a string across a number of
+files.  See <code>info/unix_commands.txt</code> for a brief explanation.
+Experienced programmers use <code>grep</code> all the time!
+
+<p>
+You can use the compiler to help
+you with your refactoring.  In particular, as you make changes, the compiler
+will flag now invalid uses of moved methods.  This serves two purposes.  The
+first, and arguably most important, is gaining an understanding of the error
+messages that the compiler reports and the reasons for such error messages.
+Nobody enjoys seeing error messages, but quickly interpreting and addressing
+such errors will improve your workflow.
+
+<p>
+The second purpose for using the compiler as an aid is that it can quickly
+identify all parts of a code base affected by a change.  This is incredibly
+beneficial when working with unfamiliar code.
+
+<p>
+   Consider the following more specific tips.
+</p>
+
+<ul>
+   <li>
+      Examine the data attributes in each class.  Draw a graph of dependencies
+      between the classes (in the project) based on the data stored in each
+      (e.g., <code>WorldModel</code> relies on <code>Entity</code>).  Start
+      your refactoring by moving methods into those classes that depend on
+      the fewest other classes.
+   <li>
+      In the class you are currently examining, you can temporarily change 
+      the access modifier for a data attribute to <code>private</code>, and
+      run the compiler.  This will gell you where other classes attempt
+      to access the private attribute.
+   <li>
+      After moving a method and removing <code>static</code>, remove the
+      target object from the parameter list, and change all uses within the
+      method to <code>this</code>, eithher implicitly or explicitly.  Compile 
+      the program to determine where the method was invoked.
+   </li>
+</ul>
+<p>
+When you're done, <code>Functions.java</code> should contain an empty 
+class.  When that happens, delete the file.
+
+<h4 class="header">Other Static Methods</h4>
+<p>
+As you refactor the code, you may find other methods that can be moved
+from one class to another, and made into instance methods.  For example,
+this might be clearer than adding a new getter or setter, when a data member
+is made private.  As you find other improvements like these, make them!
+
+<h4 class="header">Access Modifiers</h4>
+<p>
+   With the exception of some constant (<code>static final</code>) values,
+   and the class <code>Point</code>, 
+   all data attributes should be <code>private</code> and, when possible,
+   <code>final</code>.  When you make something private, you may need
+   to add a getter and/or setter.  It's OK for data holders like <code>Point</code> 
+   to have public members, particularly when they are final.
+
+<p>
+   Methods should also be <code>private</code> unless <code>public</code>
+   access is necessary (i.e., it is used outside of the defining class).
+   For this assignment, every method should be either <code>private</code>
+   or <code>public</code>.  In this course, we are not using Java packages,
+   so Java's package-private access level is not meaningful.
+<p>
+   <code>VirtualWorld</code> still has public static data members, and
+   static functions.  We'll deal with this in a subsequent assignment.
+
+<div class="header">
+<h2>Fixing a Bug</h2>
+</div>
+<p>
+When you run the program, you might notice that the miners don't
+change appearance when they become full.  That's because there's a bit
+of unfinished work in the program.  Look in the <code>images</code>
+directory.  You'll notice that there are a set of images called
+<code>miner_full<i>n</i>.png</code>.  They add a white dot to the miner,
+to indicate that it is full.  Once you've finished refactoring the code,
+your next job is to finish this work.  Modify the program so that when
+a miner becomes full, and starts seeking a blacksmith, it is rendered
+with the appropriate image sequence.  For text mode, use the sequence
+"mM$mM" to render a full miner.  When this is working, the
+program will look like this:
+<p>
+<img src="html_images/p2_graphical.png">
+
+
+<div class="header">
+<h2>About Images, Repos and the Unix Server</h2>
+</div>
+<p>
+If you feel ready, now would be a great time to get your computer set up,
+instead of using the Unix servers or the lab machines.  It's faster, you
+don't need to be connected to the network, and it lets you see the graphics.
+You still need to run <code>checkgit</code> on the Unix server, but there's
+no particular reason to main a repo there.  (Checkgit clones a copy of your
+repo every time you run it).
+<p>
+If you are switching between computers, though, the easiest and most realiable
+way to keep the two versions of turnin consistent is by using git.  When you
+make changes on one computer, add, commit and push your changes there, and then
+pull those changes on the other computer.
+<p>
+When you do this, you may notice that the image files don't get checked in.
+That's intentional, because you don't need to change the images, and they're
+somewhat large.  So, if you are using multiple computers, you'll have to
+copy the <code>images</code> directory into each project in each copy of your
+turnin repository, either using the <code>cp</code> command as previously
+described, or by using your computer's file browser.
+
+<div class="header">
+<h2>Submission</h2>
+</div>
+
+<p>
+Submit your program in <code>turninXXX/p2</code> to GitHub 
+by midnight on the due date.  Java source files should go in
+<code>turninXXX/p2/src</code>, and your documentation files
+should be in <code>turninXXX/p2/doc</code>.  You'll probably want to
+copy your <code>run.sh</code> file and the <code>images</code> directory to
+<code>turninXXX/p2</code>, so you can do your work directly there.
+When you submit the files to github, the image files won't be uploaded;
+git has been configured to ignore them, in the file 
+<code>turninXXX/.gitignore</code>.
+<p>
+If you'd like to submit the assignment one day late with a penalty of 5%, 
+add a file called <code>late_5_percent_off.txt</code> to the 
+<code>p2</code> directory.  If you'd like to submit the assignment two 
+days late with a penalty of 15%, add a file called
+<code>late_15_percent_off.txt</code> to the <code>p2</code>
+directory.  Make sure you add and push the late file.
+<p>
+After your code is working and submitted,
+check your submission using the <code>checkgit</code> command on the
+unix server.  If the autograder can't find your files for a reason that
+is caught by <code>checkgit</code>, you will get a zero on the assignment.  To
+check your submission, on a Unix server type:
+<blockquote><pre>checkgit &lt;git-login> 203 p2</pre></blockquote>
+<p>
+If it works, you will see the message "** Tests Passed **".  If not,
+you will see some kind of error message.  The error message might not tell
+you exactly what you need to change, but it should give an indication as
+to what is wrong.
+<p>
+The <code>p2</code> directory must contain the following files:
+
+<ul>
+<li><code>src/Action.java</code>
+<li><code>src/ActionKind.java</code>
+<li><code>src/Entity.java</code>
+<li><code>src/EntityKind.java</code>
+<li><code>src/Event.java</code>
+<li><code>src/EventScheduler.java</code>
+<li><code>src/Point.java</code>
+<li><code>src/VirtualWorld.java</code>
+<li><code>src/WorldModel.java</code>
+<li><code>doc/classes.graphml</code>
+</ul>
+
+
+</div>
+</div>
+</body>
+</html>
