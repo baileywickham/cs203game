@@ -25,6 +25,6 @@ final class Event
     }
 
     public void execute(EventSchedule schedule) {
-        Functions.executeAction(action, schedule);
+        action.executeAction(schedule);
     }
 }

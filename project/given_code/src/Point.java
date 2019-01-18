@@ -43,4 +43,19 @@ final class Point
         result = result * 31 + y;
         return result;
     }
+
+    public static int distanceSquared(Point p1, Point p2)
+    {
+        int deltaX = p1.getX() - p2.getX();
+        int deltaY = p1.getY() - p2.getY();
+
+        return deltaX * deltaX + deltaY * deltaY;
+    }
+
+
+    public static boolean adjacent(Point p1, Point p2)
+    {
+        return (p1.getX() == p2.getX() && Math.abs(p1.getY() - p2.getY()) == 1)
+                || (p1.getY() == p2.getY() && Math.abs(p1.getX() - p2.getX()) == 1);
+    }
 }
